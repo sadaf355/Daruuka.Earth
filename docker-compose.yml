@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgis/postgis:15-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: darukaa
+      POSTGRES_PASSWORD: darukaa
+      POSTGRES_DB: darukaa
+    ports:
+      - "5432:5432"
+    volumes:
+      - darukaa_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U darukaa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Compose-level values win over .env so the container always points at the db service.
+      DATABASE_URL: postgresql+psycopg2://darukaa:darukaa@db:5432/darukaa
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-change-me}
+      LLM_PROVIDER: ${LLM_PROVIDER:-fallback}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      AGENT_ENABLED: ${AGENT_ENABLED:-true}
+      # 120s in local dev so the agent is observable during a demo; 900s is the default.
+      AGENT_INTERVAL_SECONDS: ${AGENT_INTERVAL_SECONDS:-120}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    env_file:
+      - path: ./frontend/.env
+        required: false
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      # Without a token the map renders a configuration notice instead of a live map.
+      VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN:-}
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+
+volumes:
+  darukaa_db_data:

@@ -1,0 +1,32 @@
+# Backend formatting/linting hooks.
+#
+# These are invoked from .husky/pre-commit rather than by `pre-commit install`, because
+# Husky sets git's core.hooksPath and only one tool can own it. Install with:
+#
+#     pip install pre-commit && pre-commit install --install-hooks
+#
+# (the `--install-hooks` step pre-builds the environments so the first commit isn't slow)
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        files: ^backend/
+        language_version: python3.11
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        files: ^backend/
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: detect-private-key

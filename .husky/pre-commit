@@ -1,0 +1,11 @@
+# Frontend: ESLint --fix + Prettier on staged .ts/.tsx/.css/.json/.md files.
+npx --no-install lint-staged
+
+# Backend: Black + Ruff on staged .py files, via the pre-commit framework.
+# Only Husky may own git's core.hooksPath, so `pre-commit` is invoked from here rather
+# than installing its own competing hook into .git/hooks.
+if command -v pre-commit >/dev/null 2>&1; then
+  pre-commit run --hook-stage pre-commit
+else
+  echo "hint: 'pip install pre-commit' to run Black + Ruff on staged backend files."
+fi

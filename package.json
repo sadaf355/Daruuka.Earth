@@ -1,0 +1,16 @@
+{
+  "name": "darukaa-earth",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Repo-root tooling: git hooks that lint both workspaces before a commit lands.",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend test",
+    "hooks:install": "npm install && pip install pre-commit && pre-commit install --install-hooks"
+  },
+  "devDependencies": {
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10"
+  }
+}
